@@ -14,6 +14,7 @@ import numpy as np, os, sys
 import mne
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.naive_bayes import GaussianNB
 import joblib
 
 ################################################################################
@@ -63,6 +64,9 @@ def train_challenge_model(data_folder, model_folder, verbose):
         current_cpc = get_cpc(patient_metadata)
         cpcs.append(current_cpc)
 
+    print(features)
+    print(outcomes)
+    
     features = np.vstack(features)
     outcomes = np.vstack(outcomes)
     cpcs = np.vstack(cpcs)
@@ -81,8 +85,15 @@ def train_challenge_model(data_folder, model_folder, verbose):
 
     # Train the models.
     features = imputer.transform(features)
-    outcome_model = RandomForestClassifier(
-        n_estimators=n_estimators, max_leaf_nodes=max_leaf_nodes, random_state=random_state).fit(features, outcomes.ravel())
+
+    #Actual algorithm implementation
+    #Start with Naive Bayes maybe?
+    #Perhaps also use libraries so stuff isn't so complicated
+
+    
+    #outcome_model = RandomForestClassifier(
+    #    n_estimators=n_estimators, max_leaf_nodes=max_leaf_nodes, random_state=random_state).fit(features, outcomes.ravel())
+    outcome_model = GaussianNB().fit(features, outcomes.ravel())
     cpc_model = RandomForestRegressor(
         n_estimators=n_estimators, max_leaf_nodes=max_leaf_nodes, random_state=random_state).fit(features, cpcs.ravel())
 
@@ -116,7 +127,19 @@ def run_challenge_models(models, data_folder, patient_id, verbose):
     features = imputer.transform(features)
 
     # Apply models to features.
+
+    #Instead of doing predict here we will run it through the algs.
+    #Plan:
+    # 1. Make a regression model that is trained and save out its weights.
+    # 2. Make a classification model that is trained and save out its weights.
+    # 3. Use those weights to predict here.
+
+
     outcome = outcome_model.predict(features)[0]
+    #print(outcome)
+    #print(outcome_model.predict_proba(features))
+    #print(outcome_model.predict_proba(features)[0,0])
+    #print(outcome_model.predict_proba(features)[0,1])
     outcome_probability = outcome_model.predict_proba(features)[0, 1]
     cpc = cpc_model.predict(features)[0]
 
